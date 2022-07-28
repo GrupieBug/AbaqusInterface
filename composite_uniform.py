@@ -1,5 +1,4 @@
 # -*- coding: mbcs -*-
-import abaqus
 from part import *
 from material import *
 from section import *
@@ -13,7 +12,6 @@ from job import *
 from sketch import *
 from visualization import *
 from connectorBehavior import *
-from random import randrange, uniform
 import math
 
 porosity = 1 - ((math.pi * (1.5 ** 1) * 16) / (20 * 20))
@@ -23,35 +21,20 @@ num_fibers = 16
 radius = float(math.sqrt((1 - porosity) * dim * dim / (math.pi * num_fibers)))
 centers = []
 
-mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=(dim * 10))
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
 mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(0.0, 0.0),
-                                                        point2=(dim, dim))
+                                                        point2=(20.0, 20.0))
 mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Composite', type=
 DEFORMABLE_BODY)
 mdb.models['Model-1'].parts['Composite'].BaseShell(sketch=
                                                    mdb.models['Model-1'].sketches['__profile__'])
 del mdb.models['Model-1'].sketches['__profile__']
 
+center_x = 2.5
+center_y = 2.5
+
 for i in range(1, num_fibers + 1):
-    center_x = uniform(radius, dim - radius)
-    center_y = uniform(radius, dim - radius)
-
-    if centers:
-        colliding = True
-        while colliding:
-            for point in centers:
-                if point[0] - 2 * radius <= center_x <= point[0] + 2 * radius and point[1] - 2 * radius <= center_y <= \
-                        point[1] + 2 * radius:
-                    center_x = uniform(radius, dim - radius)
-                    center_y = uniform(radius, dim - radius)
-                    colliding = True
-                    break
-                else:
-                    colliding = False
-        centers.append([center_x, center_y])
-    else:
-        centers.append([center_x, center_y])
-
+    centers.append([center_x, center_y])
     mdb.models['Model-1'].ConstrainedSketch(gridSpacing=1.41, name='__profile__',
                                             sheetSize=56.56, transform=
                                             mdb.models['Model-1'].parts['Composite'].MakeSketchTransform(
@@ -72,6 +55,12 @@ for i in range(1, num_fibers + 1):
                                                                                                    0.0),)),
                                                                    sketch=mdb.models['Model-1'].sketches['__profile__'])
     del mdb.models['Model-1'].sketches['__profile__']
+
+    if center_x < 15.0:
+        center_x = center_x + 5.0
+    else:
+        center_y = center_y + 5.0
+        center_x = 2.5
 
 mdb.models['Model-1'].Material(name='Steel')
 mdb.models['Model-1'].materials['Steel'].Elastic(table=((1.77, 0.001),))
@@ -94,7 +83,6 @@ mdb.models['Model-1'].parts['Composite'].SectionAssignment(offset=0.0,
 for i in range(1, num_fibers + 1):
     center_x = centers[i - 1][0]
     center_y = centers[i - 1][1]
-
     mdb.models['Model-1'].parts['Composite'].Set(faces=
                                                  mdb.models['Model-1'].parts['Composite'].faces.findAt(
                                                      ((center_x, center_y,
@@ -139,7 +127,6 @@ mdb.models['Model-1'].parts['Composite'].setElementType(elemTypes=(ElemType(
 for i in range(1, num_fibers + 1):
     center_x = centers[i - 1][0]
     center_y = centers[i - 1][1]
-
     mdb.models['Model-1'].parts['Composite'].setElementType(elemTypes=(ElemType(
         elemCode=CPE4R, elemLibrary=STANDARD, secondOrderAccuracy=OFF,
         hourglassControl=DEFAULT, distortionControl=DEFAULT), ElemType(
@@ -157,5 +144,4 @@ mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF,
         multiprocessingMode=DEFAULT, name='Job-1', nodalOutputPrecision=SINGLE,
         numCpus=1, numGPUs=0, queue=None, resultsFormat=ODB, scratch='', type=
         ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
-# Property of Not Real Engineering
-# Author: Shank S. Kulkarni
+

@@ -1,5 +1,4 @@
 # -*- coding: mbcs -*-
-import abaqus
 from part import *
 from material import *
 from section import *
